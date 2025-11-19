@@ -7,7 +7,7 @@ function modifyFetch() {
   const { fetch: originFetch } = window
 
   // @ts-ignore
-  if (originFetch.isModifiedByThreadsLens) {
+  if (originFetch.isModifiedByVelove) {
     return
   }
 
@@ -56,14 +56,12 @@ function modifyFetch() {
         }
   
         if (
-          host !== 'v3.velog.io'
+          (host !== 'v2.velog.io' && host !== 'v3.velog.io')
           || path !== '/graphql'
           || method !== 'POST'
         ) {
           return
         }
-
-        window.postMessage({ headers }, '*')
   
         if (
           !body
@@ -115,24 +113,20 @@ function modifyFetch() {
           bodyText = body
         }
 
-        let bodyObj: Record<string, any>
+        bodyText = convertGraphqlTextToJson(bodyText)
+        const bodyObj: Record<string, any> = JSON.parse(bodyText)
 
-        if (isURLSearchParamsText(bodyText)) {
-          const params = new URLSearchParams(bodyText)
-          bodyObj = Object.fromEntries(params)
-
-        } else if (isJSONText(bodyText)) {
-          const json = JSON.parse(bodyText)
-          bodyObj = json
-
+        if (bodyObj.operationName === 'ReadPostForEdit') {
+          window.postMessage({ editedPostId: bodyObj.variables.id }, '*')
+        } else if (bodyObj.operationName === 'WritePost') {
+          window.postMessage({ writePost: true }, '*')
+        } else if (bodyObj.operationName === 'RemovePost') {
+          window.postMessage({ removedPostId: bodyObj.variables.id }, '*')
         } else {
-          throw new Error(`unknown body text: ${bodyText}`)
+          // console.log(bodyObj)
         }
 
-        window.postMessage({ body: bodyObj }, '*')
-
-      } catch (e) {
-        console.log(e)
+      } catch (e) {console.log(e)
         // TODO: 오류 내용을 관리자가 알게 하기
       }
     })()
@@ -142,11 +136,11 @@ function modifyFetch() {
   }
 
   // @ts-ignore
-  window.fetch.isModifiedByThreadsLens = true
+  window.fetch.isModifiedByVelove = true
 }
 
 function modifyXhr() {
-  if ((XMLHttpRequest.prototype as any).isModifiedByThreadsLens) {
+  if ((XMLHttpRequest.prototype as any).isModifiedByVelove) {
     return
   }
 
@@ -214,14 +208,12 @@ function modifyXhr() {
         }
 
         if (
-          host !== 'www.threads.com'
-          || (path !== '/graphql/query' && path !== '/api/graphql')
+          (host !== 'v2.velog.io' && host !== 'v3.velog.io')
+          || path !== '/graphql'
           || method !== 'POST'
         ) {
           return
         }
-
-        window.postMessage({ headers }, '*')
 
         if (
           !body
@@ -249,21 +241,18 @@ function modifyXhr() {
           bodyText = body
         }
 
-        let bodyObj: Record<string, any>
+        bodyText = convertGraphqlTextToJson(bodyText)
+        const bodyObj: Record<string, any> = JSON.parse(bodyText)
 
-        if (isURLSearchParamsText(bodyText)) {
-          const params = new URLSearchParams(bodyText)
-          bodyObj = Object.fromEntries(params)
-
-        } else if (isJSONText(bodyText)) {
-          const json = JSON.parse(bodyText)
-          bodyObj = json
-
+        if (bodyObj.operationName === 'ReadPostForEdit') {
+          window.postMessage({ editedPostId: bodyObj.variables.id }, '*')
+        } else if (bodyObj.operationName === 'WritePost') {
+          window.postMessage({ writePost: true }, '*')
+        } else if (bodyObj.operationName === 'RemovePost') {
+          window.postMessage({ removedPostId: bodyObj.variables.id }, '*')
         } else {
-          throw new Error(`unknown body text: ${bodyText}`)
+          // console.log(bodyObj)
         }
-
-        window.postMessage({ body: bodyObj }, '*')
   
       } catch (e) {
         // TODO: 오류 내용을 관리자가 알게 하기
@@ -275,25 +264,15 @@ function modifyXhr() {
   }
 
   // @ts-ignore
-  XMLHttpRequest.prototype.isModifiedByThreadsLens = true
+  XMLHttpRequest.prototype.isModifiedByVelove = true
 }
 
-function isURLSearchParamsText(text: string): boolean {
-  try {
-    new URLSearchParams(text)
-    return true
-
-  } catch (e) {
-    return false
-  }
-}
-
-function isJSONText(text: string): boolean {
-  try {
-    JSON.parse(text)
-    return true
-
-  } catch (e) {
-    return false
-  }
+function convertGraphqlTextToJson(text: string): string {
+  return text.replace(/"query":\s*"([^"]*)"/s, (m, q) => {
+    const escaped = q
+      .replace(/\\/g, "\\\\")
+      .replace(/"/g, '\\"')
+      .replace(/\n/g, "\\n");
+    return `"query":"${escaped}"`;
+  });
 }

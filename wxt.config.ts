@@ -7,6 +7,9 @@ export default defineConfig({
     chromiumArgs: ['--user-data-dir=./.wxt/chrome-data'],
   },
   manifest: {
+    permissions: [
+      'storage',
+    ],
     web_accessible_resources: [
       {
         resources: ['interceptor-injected.js'],
