@@ -1,4 +1,5 @@
-const GRAPHQL_ENDPOINT = 'https://v3.velog.io/graphql'
+const GRAPHQL_ENDPOINT_V3 = 'https://v3.velog.io/graphql'
+const GRAPHQL_ENDPOINT_V2 = 'https://v2.velog.io/graphql'
 
 export type PostDto = {
   id: string,
@@ -23,8 +24,53 @@ export type PostDto = {
   likes: number,
 }
 
+export type CurrentUser = {
+  id: string,
+  username: string,
+  email: string,
+  profile: {
+    id: string,
+    thumbnail: string | null,
+    display_name: string,
+    short_bio: string,
+    profile_links: {
+      url: string,
+      email: string,
+      github: string,
+      twitter: string,
+      facebook: string,
+    },
+  },
+  userMeta: {
+    id: string,
+    email_notification: boolean,
+    email_promotion: boolean,
+  },
+}
+
+export type EditedPostDto = {
+  id: string,
+  title: string,
+  tags: string[],
+  body: string,
+  short_description: string,
+  is_markdown: boolean,
+  is_private: boolean,
+  is_temp: boolean,
+  thumbnail: string | null,
+  url_slug: string,
+  updated_at: string,
+  series: {
+    id: string,
+    name: string,
+  } | null,
+  user: {
+    id: string,
+  },
+}
+
 export async function fetchPosts({ username, limit, cursor }: { username: string, limit: number, cursor?: string }): Promise<{ posts: Post[], nextCursor?: string }> {
-  const res = await fetch(GRAPHQL_ENDPOINT, {
+  const res = await fetch(GRAPHQL_ENDPOINT_V3, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -82,8 +128,8 @@ export async function fetchPosts({ username, limit, cursor }: { username: string
     profileThumbnail: postDto.user.profile.thumbnail,
     profileDisplayName: postDto.user.profile.display_name,
     urlSlug: postDto.url_slug,
-    releasedAt: new Date(postDto.released_at),
-    updatedAt: new Date(postDto.updated_at),
+    releasedAt: new Date(postDto.released_at).getTime(),
+    updatedAt: new Date(postDto.updated_at).getTime(),
     commentsCount: postDto.comments_count,
     tags: postDto.tags,
     isPrivate: postDto.is_private,
@@ -93,32 +139,8 @@ export async function fetchPosts({ username, limit, cursor }: { username: string
   return { posts, nextCursor: posts.length === limit ? posts[posts.length - 1].id : undefined }
 }
 
-export type CurrentUser = {
-  id: string,
-  username: string,
-  email: string,
-  profile: {
-    id: string,
-    thumbnail: string | null,
-    displayName: string,
-    shortBio: string,
-    profileLinks: {
-      url: string,
-      email: string,
-      github: string,
-      twitter: string,
-      facebook: string,
-    },
-  },
-  userMeta: {
-    id: string,
-    emailNotification: boolean,
-    emailPromotion: boolean,
-  },
-}
-
 export async function fetchCurrentUsername(): Promise<string | null> {
-  const res = await fetch(GRAPHQL_ENDPOINT, {
+  const res = await fetch(GRAPHQL_ENDPOINT_V3, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -160,4 +182,60 @@ export async function fetchCurrentUsername(): Promise<string | null> {
   }
 
   return json.data.currentUser.username
+}
+
+export async function fetchEditedPost(id: string): Promise<Omit<Post, 'username' | 'profileThumbnail' | 'profileDisplayName' | 'releasedAt' | 'commentsCount' | 'likes'>> {
+  const res = await fetch(GRAPHQL_ENDPOINT_V2, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+    body: JSON.stringify({
+      operationName: 'ReadPostForEdit',
+      query: `
+        query ReadPostForEdit($id: ID) {
+          post(id: $id) {
+            id
+            title
+            tags
+            body
+            short_description
+            is_markdown
+            is_private
+            is_temp
+            thumbnail
+            url_slug
+            updated_at
+            series {
+              id
+              name
+            }
+            user {
+              id
+            }
+          }
+        } 
+      `,
+      variables: { id },
+    }),
+  })
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch edited post: ${res.status} ${res.statusText}`)
+  }
+
+  const json = await res.json() as { data: { post: EditedPostDto } }
+  const postDto = json.data.post
+
+  return {
+    id: postDto.id,
+    title: postDto.title,
+    shortDescription: postDto.short_description,
+    thumbnail: postDto.thumbnail,
+    urlSlug: postDto.url_slug,
+    updatedAt: new Date(postDto.updated_at).getTime(),
+    tags: postDto.tags,
+    isPrivate: postDto.is_private,
+  }
 }
