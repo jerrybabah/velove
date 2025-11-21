@@ -1,12 +1,14 @@
-import { fetchPosts, fetchCurrentUsername, fetchEditedPost } from './api'
-import { currentUsernameStorage, postsStorage, type Post } from '~/utils/storage'
+import {
+  fetchPosts,
+  fetchCurrentUsername,
+  fetchEditedPost,
+} from './api'
 
 export default defineContentScript({
   matches: ['https://*.velog.io/*'],
   runAt: 'document_start',
   async main() {
     try {
-
       document.addEventListener('DOMContentLoaded', async () => {
         await initStorage()
       })
