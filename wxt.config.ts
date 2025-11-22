@@ -7,6 +7,7 @@ export default defineConfig({
     chromiumArgs: ['--user-data-dir=./.wxt/chrome-data'],
   },
   manifest: {
+    action: {},
     permissions: [
       'storage',
     ],
