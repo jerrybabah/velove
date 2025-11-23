@@ -9,6 +9,7 @@ export default defineConfig({
   manifest: {
     action: {},
     permissions: [
+      'sidePanel',
       'storage',
     ],
     web_accessible_resources: [

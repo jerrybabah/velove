@@ -11,6 +11,15 @@ export default defineContentScript({
     try {
       document.addEventListener('DOMContentLoaded', async () => {
         await initStorage()
+
+        // const button = new DOMParser().parseFromString(
+        //   '<button>Click to open side panel</button>',
+        //   'text/html'
+        // ).body.firstElementChild;
+        // button!.addEventListener('click', function () {
+        //   browser.runtime.sendMessage({ toggleSidePanel: true });
+        // });
+        // document.body.append(button!);
       })
   
       window.addEventListener('message', async (event) => {
