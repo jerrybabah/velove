@@ -17,7 +17,7 @@ export default defineContentScript({
         //   'text/html'
         // ).body.firstElementChild;
         // button!.addEventListener('click', function () {
-        //   browser.runtime.sendMessage({ toggleSidePanel: true });
+        //   requestToggleSidePanel();
         // });
         // document.body.append(button!);
       })

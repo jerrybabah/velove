@@ -12,6 +12,10 @@ export default defineConfig({
       'sidePanel',
       'storage',
     ],
+    host_permissions: [
+      'https://api.mixpanel.com/*',
+      'https://api.lemonsqueezy.com/*',
+    ],
     web_accessible_resources: [
       {
         resources: ['interceptor-injected.js'],
