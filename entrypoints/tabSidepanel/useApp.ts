@@ -22,4 +22,25 @@ export function useApp() {
       }
     })
   }, [port])
+
+  const [username, setUsername] = useState<string | null>(null)
+
+  useEffect(() => {
+    (async () => {
+      const username = await currentUsernameStorage.getValue()
+      setUsername(username)
+    })()
+
+    const unwatch = currentUsernameStorage.watch((newUsername) => {
+      setUsername(newUsername)
+    })
+
+    return () => {
+      unwatch()
+    }
+  }, [])
+
+  return {
+    username,
+  }
 }

@@ -1,7 +1,7 @@
 import { useApp } from './useApp'
 
 export function App() {
-  useApp()
+  const { username } = useApp()
 
-  return <div>Side Panel Content</div>
+  return <div>{username || 'anonymous'}</div>
 }

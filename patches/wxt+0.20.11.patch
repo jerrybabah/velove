@@ -1,0 +1,13 @@
+diff --git a/node_modules/wxt/dist/utils/internal/location-watcher.mjs b/node_modules/wxt/dist/utils/internal/location-watcher.mjs
+index c10ac06..f8919d1 100644
+--- a/node_modules/wxt/dist/utils/internal/location-watcher.mjs
++++ b/node_modules/wxt/dist/utils/internal/location-watcher.mjs
+@@ -16,7 +16,7 @@ export function createLocationWatcher(ctx) {
+           window.dispatchEvent(new WxtLocationChangeEvent(newUrl, oldUrl));
+           oldUrl = newUrl;
+         }
+-      }, 1e3);
++      }, 1e2);
+     }
+   };
+ }

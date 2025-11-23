@@ -1,25 +1,33 @@
+import { ContentScriptContext } from '#imports'
+import { createRoot } from 'react-dom/client'
+import type { Root } from 'react-dom/client'
+import { StyleProvider } from '@ant-design/cssinjs'
+
 import {
   fetchPosts,
   fetchCurrentUsername,
   fetchEditedPost,
 } from './api'
+import { App } from './App'
+
+let isRendering = false
 
 export default defineContentScript({
   matches: ['https://*.velog.io/*'],
   runAt: 'document_start',
-  async main() {
+  async main(ctx) {
     try {
       document.addEventListener('DOMContentLoaded', async () => {
-        await initStorage()
+        const initUrl = new URL(location.href)
 
-        // const button = new DOMParser().parseFromString(
-        //   '<button>Click to open side panel</button>',
-        //   'text/html'
-        // ).body.firstElementChild;
-        // button!.addEventListener('click', function () {
-        //   requestToggleSidePanel();
-        // });
-        // document.body.append(button!);
+        await Promise.all([
+          initStorage(),
+          onUrlChanged(null, initUrl, ctx),
+        ])
+      })
+
+      ctx.addEventListener(window, 'wxt:locationchange', async ({ oldUrl, newUrl }) => {
+        await onUrlChanged(oldUrl, newUrl, ctx)
       })
   
       window.addEventListener('message', async (event) => {
@@ -40,7 +48,67 @@ export default defineContentScript({
       console.error('Failed to initialize content script', error)
     }
   },
-});
+})
+
+async function onUrlChanged(oldUrl: URL | null, newUrl: URL, ctx: ContentScriptContext): Promise<void> {
+  if (isRendering) {
+    return
+  }
+
+  isRendering = true
+
+  try {
+    const notificationIconEls = await getNotificationIconElements()
+  
+    await Promise.all(Array.from(notificationIconEls).map(async (notificationIconEl, index) => {
+      console.log('Injecting Velove UI at notification icon', { index })
+      const alreadyShadow = document.querySelector(`velove-${index}`)
+  
+      if (alreadyShadow) {
+        return
+      }
+
+      const shadow = await createShadowRootUi(ctx, {
+        name: `velove-${index}`,
+        position: 'inline',
+        anchor: notificationIconEl,
+        append: 'before',
+        onMount(shadowContainer, shadowRoot) {
+          const cssContainer = shadowRoot.querySelector('head')!
+          const root = createRoot(shadowContainer)
+    
+          root.render(
+            <StyleProvider container={cssContainer}>
+              <App/>
+            </StyleProvider>
+          )
+    
+          return { root }
+        },
+        onRemove(mounted?: { root: Root }) {
+          mounted?.root.unmount()
+        },
+      })
+
+      shadow.mount()
+    }))
+  } catch (error) {
+    console.error('Error in onUrlChanged:', error)
+  } finally {
+    isRendering = false
+  }
+}
+
+async function getNotificationIconElements(): Promise<NodeListOf<HTMLAnchorElement>> {
+  for (let attempt = 0; attempt < 100; attempt++) {
+    const els = document.querySelectorAll<HTMLAnchorElement>('a[href$="/notifications"]')
+    if (els.length > 0) {
+      return els
+    }
+    await new Promise(resolve => setTimeout(resolve, 10))
+  }
+  return document.querySelectorAll<HTMLAnchorElement>('a[href$="/notifications"]')
+}
 
 async function initStorage() {
   const username = await fetchCurrentUsername()

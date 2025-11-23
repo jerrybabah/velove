@@ -7,6 +7,8 @@ export default defineConfig({
     chromiumArgs: ['--user-data-dir=./.wxt/chrome-data'],
   },
   manifest: {
+    name: 'velove - velog 카테고리, 통계',
+    description: '카테고리로 내 글 관리하기, 통계 편하게 보기',
     action: {},
     permissions: [
       'sidePanel',
