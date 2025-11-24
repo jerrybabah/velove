@@ -24,6 +24,15 @@ export default defineContentScript({
           initStorage(),
           onUrlChanged(null, initUrl, ctx),
         ])
+
+        setInterval(async () => {
+          const buttonEl = document.querySelector(`velove-1`)
+
+          if (!buttonEl) {
+            const currentUrl = new URL(location.href)
+            await onUrlChanged(null, currentUrl, ctx)
+          }
+        }, 500)
       })
 
       ctx.addEventListener(window, 'wxt:locationchange', async ({ oldUrl, newUrl }) => {
@@ -59,12 +68,15 @@ async function onUrlChanged(oldUrl: URL | null, newUrl: URL, ctx: ContentScriptC
 
   try {
     const notificationIconEls = await getNotificationIconElements()
-  
+
     await Promise.all(Array.from(notificationIconEls).map(async (notificationIconEl, index) => {
-      console.log('Injecting Velove UI at notification icon', { index })
       const alreadyShadow = document.querySelector(`velove-${index}`)
   
       if (alreadyShadow) {
+        return
+      }
+
+      if (notificationIconEl.innerText === '전체') {
         return
       }
 
