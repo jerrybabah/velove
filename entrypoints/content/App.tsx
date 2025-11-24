@@ -16,6 +16,7 @@ export function App() {
     <ConfigProvider theme={theme}>
       <Button
         onClick={onClick}
+        shape='round'
       >
         velove❤️
       </Button>
