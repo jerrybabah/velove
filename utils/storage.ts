@@ -15,6 +15,12 @@ export type Post = {
   tags: string[],
   isPrivate: boolean,
   likes: number,
+  viewStat?: {
+    views: number,
+    last7DaysViews: number,
+    last30DaysViews: number,
+    viewsByDay: { [day: string]: number }, // INFO: day is in ISO date string
+  }
 }
 
 export const postsStorage = storage.defineItem<Post[], { cachedAt: number }>('local:posts')

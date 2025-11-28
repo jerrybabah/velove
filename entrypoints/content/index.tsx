@@ -7,6 +7,7 @@ import {
   fetchPosts,
   fetchCurrentUsername,
   fetchEditedPost,
+  fetchPostStat,
 } from './api'
 import { App } from './App'
 
@@ -142,12 +143,12 @@ async function initStorage() {
     return
   }
 
-  let allPosts: Post[] = []
+  let postsWithoutStats: Post[] = []
   let cursor: string | undefined = undefined
 
   while (true) {
     const { posts, nextCursor } = await fetchPosts({ username, limit: 50, cursor })
-    allPosts = allPosts.concat(posts)
+    postsWithoutStats = postsWithoutStats.concat(posts)
 
     if (!nextCursor) {
       break
@@ -155,6 +156,24 @@ async function initStorage() {
 
     cursor = nextCursor
   }
+
+  const statResults = await chunkRun({
+    inputs: postsWithoutStats,
+    size: 10,
+    async run(post) {
+      return enrichPostWithViewStat(post)
+    },
+  })
+
+  const allPosts = statResults.map((result, index) => {
+    if (result.status === 'fulfilled') {
+      return result.value
+    }
+
+    console.error(`Failed to fetch stats for post ${postsWithoutStats[index].id}`, result.reason)
+    return postsWithoutStats[index]
+  })
+
 
   postsStorage.setValue(allPosts)
   postsStorage.setMeta({ cachedAt: Date.now() })
@@ -174,9 +193,15 @@ async function handleEditedPostEvent(postId: string) {
   }
 
   const editedPost = await fetchEditedPost(postId)
-  const updatedPost: Post = {
+  let updatedPost: Post = {
     ...posts[targetIndex],
     ...editedPost,
+  }
+
+  try {
+    updatedPost = await enrichPostWithViewStat(updatedPost)
+  } catch (error) {
+    console.error(`Failed to refresh stats for edited post ${postId}`, error)
   }
 
   const nextPosts = [...posts]
@@ -221,6 +246,48 @@ async function handleWritePostEvent() {
     return
   }
 
+  let latestPostWithStats: Post = latestPost
+  try {
+    latestPostWithStats = await enrichPostWithViewStat(latestPost)
+  } catch (error) {
+    console.error(`Failed to refresh stats for latest post ${latestPost.id}`, error)
+  }
+
   const dedupedPosts = prevPosts.filter((post) => post.id !== latestPost.id)
-  postsStorage.setValue([latestPost, ...dedupedPosts])
+  postsStorage.setValue([latestPostWithStats, ...dedupedPosts])
+}
+
+async function enrichPostWithViewStat(post: Post): Promise<Post> {
+  const stat = await fetchPostStat(post.id)
+
+  return {
+    ...post,
+    viewStat: buildViewStat(stat),
+  }
+}
+
+function buildViewStat(stat: Awaited<ReturnType<typeof fetchPostStat>>): NonNullable<Post['viewStat']> {
+  const DAY_MS = 24 * 60 * 60 * 1000
+  const startOfToday = new Date()
+  startOfToday.setHours(0, 0, 0, 0)
+
+  const sumViewsWithinDays = (days: number) => {
+    const lowerBound = startOfToday.getTime() - (days - 1) * DAY_MS
+
+    return Object.entries(stat.countByDay).reduce((total, [day, count]) => {
+      const dayTime = new Date(day).getTime()
+      if (Number.isNaN(dayTime)) {
+        return total
+      }
+
+      return dayTime >= lowerBound ? total + count : total
+    }, 0)
+  }
+
+  return {
+    views: stat.total,
+    last7DaysViews: sumViewsWithinDays(7),
+    last30DaysViews: sumViewsWithinDays(30),
+    viewsByDay: stat.countByDay,
+  }
 }

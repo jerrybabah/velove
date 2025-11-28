@@ -69,6 +69,14 @@ export type EditedPostDto = {
   },
 }
 
+export type StatDto = {
+  total: number,
+  count_by_day: Array<{
+    count: number,
+    day: string, // ISO date string
+  }>
+}
+
 export async function fetchPosts({ username, limit, cursor }: { username: string, limit: number, cursor?: string }): Promise<{ posts: Post[], nextCursor?: string }> {
   const res = await fetch(GRAPHQL_ENDPOINT_V3, {
     method: 'POST',
@@ -237,5 +245,48 @@ export async function fetchEditedPost(id: string): Promise<Omit<Post, 'username'
     updatedAt: new Date(postDto.updated_at).getTime(),
     tags: postDto.tags,
     isPrivate: postDto.is_private,
+  }
+}
+
+// INFO: day is in ISO date string
+export async function fetchPostStat(id: string): Promise<{ total: number, countByDay: { [day: string]: number } }> {
+  const res = await fetch(GRAPHQL_ENDPOINT_V2, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+    body: JSON.stringify({
+      operationName: 'GetStats',
+      query: `
+        query GetStats($post_id: ID!) {
+          getStats(post_id: $post_id) {
+            total
+            count_by_day {
+              count
+              day
+            }
+          }
+        }
+      `,
+      variables: { post_id: id },
+    }),
+  })
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch stats: ${res.status} ${res.statusText}`)
+  }
+
+  const json = await res.json() as { data: { getStats: StatDto } }
+  const statDto = json.data.getStats
+
+  const countByDay: { [day: string]: number } = {}
+  for (const entry of statDto.count_by_day) {
+    countByDay[entry.day] = entry.count
+  }
+
+  return {
+    total: statDto.total,
+    countByDay,
   }
 }
