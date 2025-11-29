@@ -11,8 +11,8 @@ export function App() {
     <ConfigProvider theme={theme}>
       <Result
         status='404'
-        title='velog.io 전용 익스텐션입니다'
-        subTitle='velog에서 클릭하면 사이드패널이 열립니다'
+        title='velog 전용 익스텐션입니다'
+        subTitle='velog.io에 머무른 상태에서 클릭해주세요'
         extra={
           <Button
             type='primary'
