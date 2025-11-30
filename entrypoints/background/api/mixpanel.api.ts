@@ -59,9 +59,9 @@ export async function track(event: string, props: Record<string, any>): Promise<
 async function getIp() {
   const ipPromise = fetch('https://api.ipify.org/?format=json')
     .then((response) => response.json())
-    .then((json) => json.ip)
+    .then<string>((json) => json.ip)
 
-  const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(''), 1000))
+  const timeoutPromise = new Promise<string>((resolve) => setTimeout(() => resolve(''), 1000))
 
   const ip = await Promise.race([ipPromise, timeoutPromise])
   return ip
