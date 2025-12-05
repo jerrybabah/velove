@@ -17,7 +17,7 @@ export async function setProfile({ distinctId, profile }: { distinctId: string, 
   await fetch(`${MIXPANEL_API_URL}/engage?strict=1#profile-set`, option)
 }
 
-export async function track(event: string, props: Record<string, any>): Promise<void> {
+export async function track({ event, props, distinctId }: { event: string, props?: Record<string, any>, distinctId?: string }): Promise<void> {
   const token = btoa(`${import.meta.env.WXT_MIXPANEL_PROJECT_TOKEN}:`)
 
   const insertId = generateInsertId()
@@ -30,8 +30,6 @@ export async function track(event: string, props: Record<string, any>): Promise<
 
   const time = Date.now()
 
-  const username = props.username
-
   const option = {
     method: 'POST',
     headers: {
@@ -42,9 +40,9 @@ export async function track(event: string, props: Record<string, any>): Promise<
     body: JSON.stringify([{
       event,
       properties: {
-        ...props,
+        ...(props || {}),
         time,
-        distinct_id: username || generateAnonymousId(),
+        distinct_id: distinctId || generateAnonymousId(),
         ip,
         $insert_id: insertId,
         $os: platform.os,

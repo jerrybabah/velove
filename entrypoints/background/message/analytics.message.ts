@@ -7,20 +7,22 @@ export const analyticsHandler: MessageHandler = {
       return
     }
 
-    const { event } = data
+    const { event, props, distinctId } = data
 
     if (typeof event !== 'string') {
       throw new Error('no event name')
     }
 
-    const props = data.props ?? {}
-
-    await trackApi(event, {
-      ...props,
-      $current_url: ctx.tab.url,
-      current_page_title: ctx.tab.title,
-      $screen_height: ctx.tab.height,
-      $screen_width: ctx.tab.width,
+    await trackApi({
+      event,
+      props: {
+        ...(props || {}),
+        $current_url: ctx.tab.url,
+        current_page_title: ctx.tab.title,
+        $screen_height: ctx.tab.height,
+        $screen_width: ctx.tab.width,
+      },
+      distinctId,
     })
   }
 }

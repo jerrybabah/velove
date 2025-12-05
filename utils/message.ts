@@ -1,7 +1,7 @@
-export async function requestTrack(event: string, props: { [key: string]: any }) {
+export async function requestTrack({ event, props, distinctId }: { event: string, props?: { [key: string]: any }, distinctId?: string }): Promise<void> {
   const response = await browser.runtime.sendMessage({
     type: 'track',
-    data: { event, props },
+    data: { event, props, distinctId },
   })
 
   if (response.error) {
