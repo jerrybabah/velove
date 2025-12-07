@@ -122,12 +122,10 @@ function modifyFetch() {
           window.postMessage({ writePost: true }, '*')
         } else if (bodyObj.operationName === 'RemovePost') {
           window.postMessage({ removedPostId: bodyObj.variables.id }, '*')
-        } else {
-          // console.log(bodyObj)
         }
 
-      } catch (e) {console.log(e)
-        // TODO: 오류 내용을 관리자가 알게 하기
+      } catch (e) {
+        // console.log(e) // FOR DEBUGGING
       }
     })()
     // [END] send headers, body
@@ -250,12 +248,10 @@ function modifyXhr() {
           window.postMessage({ writePost: true }, '*')
         } else if (bodyObj.operationName === 'RemovePost') {
           window.postMessage({ removedPostId: bodyObj.variables.id }, '*')
-        } else {
-          // console.log(bodyObj)
         }
   
       } catch (e) {
-        // TODO: 오류 내용을 관리자가 알게 하기
+        // console.log(e) // FOR DEBUGGING
       }
     })()
     // [END] send headers, body
