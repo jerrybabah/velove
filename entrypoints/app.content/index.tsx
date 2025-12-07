@@ -10,6 +10,7 @@ import {
   fetchPostStat,
 } from './api'
 import { Toggle } from './Toggle'
+import { Copy } from './Copy'
 
 export default defineContentScript({
   matches: ['https://*.velog.io/*'],
@@ -27,7 +28,7 @@ export default defineContentScript({
         let attempt = 0
 
         const intervalId = setInterval(async () => {
-          const toggleEl = document.querySelector(`velove-1`)
+          const toggleEl = document.querySelector(`velove-toggle-1`)
 
           if (toggleEl || attempt >= 20) {
             clearInterval(intervalId)
@@ -65,6 +66,98 @@ export default defineContentScript({
 
 async function handleUrlChanged(oldUrl: URL | null, newUrl: URL, ctx: ContentScriptContext): Promise<void> {
   await renderToggle(ctx)
+
+  const isPostPage = checkPostPage(newUrl)
+
+  if (isPostPage) {
+    await renderCopy(ctx)
+  }
+}
+
+function checkPostPage(url: URL): boolean {
+  const pathMatch = url.pathname.match(/^\/@([^/]+)\/([^/]+)$/)
+    
+  if (!pathMatch) {
+    return false
+  }
+
+  const [, , pathItem] = pathMatch
+  const excludedPaths = ['posts', 'series', 'about', 'followers', 'followings']
+
+  if (excludedPaths.includes(pathItem)) {
+    return false
+  }
+
+  return Boolean(pathMatch)
+}
+
+let isRenderingCopy = false
+
+async function renderCopy(ctx: ContentScriptContext) {
+  if (isRenderingCopy) {
+    return
+  }
+
+  isRenderingCopy = true
+
+  try {
+    const preEls = document.querySelectorAll<HTMLPreElement>('pre')
+
+    await Promise.all(Array.from(preEls).map(async (preEl, index) => {
+      const alreadyShadow = document.querySelector(`velove-copy-${index}`)
+  
+      if (alreadyShadow) {
+        return
+      }
+  
+      const codeText = preEl.innerText.trim()
+
+      const shadow = await createShadowRootUi(ctx, {
+        name: `velove-copy-${index}`,
+        position: 'overlay',
+        alignment: 'top-right',
+        anchor: preEl,
+        append: 'first',
+        inheritStyles: true,
+        onMount(shadowContainer, shadowRoot, shadowHost) {
+          Object.assign(shadowHost.style, {
+            width: '100%',
+          })
+
+          const cssContainer = shadowRoot.querySelector('head')!
+
+          // Reset body margin in shadow DOM
+          const style = document.createElement('style')
+          style.textContent = `
+            body {
+              margin: 0 !important;
+            }
+          `
+          cssContainer.appendChild(style)
+
+          const root = createRoot(shadowContainer)
+    
+          root.render(
+            <StyleProvider container={cssContainer}>
+              <Copy text={codeText} />
+            </StyleProvider>
+          )
+    
+          return { root }
+        },
+        onRemove(mounted?: { root: Root }) {
+          mounted?.root.unmount()
+        },
+      })
+
+      shadow.mount()
+    }))
+
+  } catch (error) {
+    console.error('Error in renderCopy:', error)
+  } finally {
+    isRenderingCopy = false
+  }
 }
 
 let isRenderingToggle = false
@@ -79,7 +172,7 @@ async function renderToggle(ctx: ContentScriptContext) {
     const notificationIconEls = await getNotificationIconElements()
 
     await Promise.all(Array.from(notificationIconEls).map(async (notificationIconEl, index) => {
-      const alreadyShadow = document.querySelector(`velove-${index}`)
+      const alreadyShadow = document.querySelector(`velove-toggle-${index}`)
   
       if (alreadyShadow) {
         return
@@ -90,7 +183,7 @@ async function renderToggle(ctx: ContentScriptContext) {
       }
 
       const shadow = await createShadowRootUi(ctx, {
-        name: `velove-${index}`,
+        name: `velove-toggle-${index}`,
         position: 'inline',
         anchor: notificationIconEl,
         append: 'before',
