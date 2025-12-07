@@ -15,7 +15,7 @@
     "postinstall": "wxt prepare && patch-package"
   },
   "dependencies": {
-    "@ant-design/icons": "5.x",
+    "@ant-design/icons": "6.x",
     "antd": "^6.0.0",
     "lodash": "^4.17.21",
     "react": "^19.1.1",
