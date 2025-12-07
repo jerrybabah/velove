@@ -11,8 +11,6 @@ import {
 } from './api'
 import { App } from './App'
 
-let isRendering = false
-
 export default defineContentScript({
   matches: ['https://*.velog.io/*'],
   runAt: 'document_start',
@@ -23,32 +21,37 @@ export default defineContentScript({
 
         await Promise.all([
           initStorage(),
-          onUrlChanged(null, initUrl, ctx),
+          handleUrlChanged(null, initUrl, ctx),
         ])
 
-        setInterval(async () => {
-          const buttonEl = document.querySelector(`velove-1`)
+        let attempt = 0
 
-          if (!buttonEl) {
-            const currentUrl = new URL(location.href)
-            await onUrlChanged(null, currentUrl, ctx)
+        const intervalId = setInterval(async () => {
+          const toggleEl = document.querySelector(`velove-1`)
+
+          if (toggleEl || attempt >= 20) {
+            clearInterval(intervalId)
+            return
           }
+
+          attempt += 1
+          await renderToggle(ctx)
         }, 500)
       })
 
       ctx.addEventListener(window, 'wxt:locationchange', async ({ oldUrl, newUrl }) => {
-        await onUrlChanged(oldUrl, newUrl, ctx)
+        await handleUrlChanged(oldUrl, newUrl, ctx)
       })
   
       window.addEventListener('message', async (event) => {
         const { editedPostId, writePost, removedPostId } = event.data || {}
   
         if (editedPostId) {
-          await handleEditedPostEvent(editedPostId)
+          await handlePostEdited(editedPostId)
         } else if (writePost) {
-          await handleWritePostEvent()
+          await handlePostWritten()
         } else if (removedPostId) {
-          await handleRemovedPostEvent(removedPostId)
+          await handlePostRemoved(removedPostId)
         }
       })
   
@@ -60,13 +63,18 @@ export default defineContentScript({
   },
 })
 
-async function onUrlChanged(oldUrl: URL | null, newUrl: URL, ctx: ContentScriptContext): Promise<void> {
-  if (isRendering) {
+async function handleUrlChanged(oldUrl: URL | null, newUrl: URL, ctx: ContentScriptContext): Promise<void> {
+  await renderToggle(ctx)
+}
+
+let isRenderingToggle = false
+
+async function renderToggle(ctx: ContentScriptContext) {
+  if (isRenderingToggle) {
     return
   }
 
-  isRendering = true
-
+  isRenderingToggle = true
   try {
     const notificationIconEls = await getNotificationIconElements()
 
@@ -108,7 +116,7 @@ async function onUrlChanged(oldUrl: URL | null, newUrl: URL, ctx: ContentScriptC
   } catch (error) {
     console.error('Error in onUrlChanged:', error)
   } finally {
-    isRendering = false
+    isRenderingToggle = false
   }
 }
 
@@ -179,7 +187,7 @@ async function initStorage() {
   postsStorage.setMeta({ cachedAt: Date.now() })
 }
 
-async function handleEditedPostEvent(postId: string) {
+async function handlePostEdited(postId: string) {
   const posts = await postsStorage.getValue()
 
   if (!posts || posts.length === 0) {
@@ -210,7 +218,7 @@ async function handleEditedPostEvent(postId: string) {
   postsStorage.setValue(nextPosts)
 }
 
-async function handleRemovedPostEvent(postId: string) {
+async function handlePostRemoved(postId: string) {
   const posts = await postsStorage.getValue()
 
   if (!posts || posts.length === 0) {
@@ -226,7 +234,7 @@ async function handleRemovedPostEvent(postId: string) {
   postsStorage.setValue(filteredPosts)
 }
 
-async function handleWritePostEvent() {
+async function handlePostWritten() {
   const username = await currentUsernameStorage.getValue()
 
   if (!username) {
