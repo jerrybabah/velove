@@ -26,3 +26,5 @@ export type Post = {
 export const postsStorage = storage.defineItem<Post[], { cachedAt: number }>('local:posts')
 
 export const currentUsernameStorage = storage.defineItem<string>('local:currentUsername')
+
+export const themeStorage = storage.defineItem<'light' | 'dark'>('local:theme')

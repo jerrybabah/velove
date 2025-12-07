@@ -22,36 +22,31 @@ export const darkTheme: ThemeConfig = {
   algorithm: theme.darkAlgorithm,
 }
 
-export function getTheme(): 'light' | 'dark' {
-  const theme = document.body.dataset.theme
-  if (theme === 'dark') {
-    return 'dark'
-  }
-  return 'light'
-}
-
 export function useTheme() {
-  const [theme, setTheme] = useState<'light' | 'dark'>(getTheme())
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    // WARN: content script에서만 유효한 초기화
+    const theme = document.body.dataset.theme
+    if (theme === 'dark') {
+      return 'dark'
+    }
+    return 'light'
+  })
 
   useEffect(() => {
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (
-          mutation.type === 'attributes' &&
-          mutation.attributeName === 'data-theme'
-        ) {
-          const newTheme = document.body.getAttribute('data-theme')
-          setTheme(newTheme === 'dark' ? 'dark' : 'light')
-        }
-      })
-    })
+    let mounted = true
 
-    observer.observe(document.body, {
-      attributes: true,
+    ;(async () => {
+      const storedTheme = await themeStorage.getValue()
+      if (mounted && storedTheme) setTheme(storedTheme)
+    })()
+
+    const unwatch = themeStorage.watch((newTheme) => {
+      if (mounted && newTheme) setTheme(newTheme)
     })
 
     return () => {
-      observer.disconnect()
+      mounted = false
+      unwatch()
     }
   }, [])
 

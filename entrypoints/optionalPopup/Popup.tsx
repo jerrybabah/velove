@@ -4,7 +4,7 @@ import {
   Button,
 } from 'antd'
 
-export function App() {
+export function Popup() {
   const theme = useTheme()
 
   return (

@@ -6,8 +6,8 @@ import {
   MessageOutlined,
   SortAscendingOutlined,
 } from '@ant-design/icons'
-import { Card, Dropdown, Empty, Spin, Typography } from 'antd'
-import { useLayoutEffect } from 'react'
+import { Card, Dropdown, Empty, Spin, Typography, ConfigProvider, theme as antdTheme } from 'antd'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 
 const { Text, Paragraph } = Typography
 
@@ -248,6 +248,9 @@ function PostCard({ post, username, onClick }: { post: Post; username: string; o
 }
 
 export function Sidepanel() {
+  const themeConfig = useTheme()
+  const token = antdTheme.getDesignToken(themeConfig)
+
   const { username, posts, sortedPosts, sortOption, setSortOption, openPost } = useSidepanelState()
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -274,49 +277,56 @@ export function Sidepanel() {
 
   if (!posts) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <Spin size="large" />
-      </div>
+      <ConfigProvider theme={themeConfig}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: token.colorBgLayout }}>
+          <Spin size="large" />
+        </div>
+      </ConfigProvider>
     )
   }
 
   if (posts.length === 0) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <Empty description="게시물이 없습니다" />
-      </div>
+      <ConfigProvider theme={themeConfig}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: token.colorBgLayout }}>
+          <Empty description="게시물이 없습니다" />
+        </div>
+      </ConfigProvider>
     )
   }
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-      }}
-    >
-      <div style={{ padding: '12px 16px', borderBottom: '1px solid #f0f0f0', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-        <Dropdown menu={{ items: sortMenuItems, selectedKeys: [sortOption] }} trigger={['click']}>
-          <Text style={{ cursor: 'pointer' }}>
-            <SortAscendingOutlined style={{ marginRight: 4 }} />
-            {SORT_OPTIONS.find((o) => o.value === sortOption)?.label}
-          </Text>
-        </Dropdown>
-      </div>
+    <ConfigProvider theme={themeConfig}>
+      <div
+        style={{
+          position: 'fixed',
+          inset: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          background: token.colorBgLayout,
+        }}
+      >
+        <div style={{ padding: '12px 16px', borderBottom: `1px solid ${token.colorBorderSecondary}`, background: token.colorBgElevated, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+          <Dropdown menu={{ items: sortMenuItems, selectedKeys: [sortOption] }} trigger={['click']}>
+            <Text style={{ cursor: 'pointer' }}>
+              <SortAscendingOutlined style={{ marginRight: 4 }} />
+              {SORT_OPTIONS.find((o) => o.value === sortOption)?.label}
+            </Text>
+          </Dropdown>
+        </div>
 
-      <div ref={containerRef} style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
-        {sortedPosts.map((post: Post) => (
-          <PostCard
-            key={post.id}
-            post={post}
-            username={username || ''}
-            onClick={() => openPost(post)}
-          />
-        ))}
+        <div ref={containerRef} style={{ flex: 1, minHeight: 0, overflowY: 'auto', background: token.colorBgLayout }}>
+          {sortedPosts.map((post: Post) => (
+            <PostCard
+              key={post.id}
+              post={post}
+              username={username || ''}
+              onClick={() => openPost(post)}
+            />
+          ))}
+        </div>
       </div>
-    </div>
+    </ConfigProvider>
   )
 }

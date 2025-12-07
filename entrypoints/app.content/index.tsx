@@ -38,6 +38,22 @@ export default defineContentScript({
           attempt += 1
           await renderToggle(ctx)
         }, 500)
+
+        const observer = new MutationObserver((mutations) => {
+          mutations.forEach(async (mutation) => {
+            if (
+              mutation.type === 'attributes' &&
+              mutation.attributeName === 'data-theme'
+            ) {
+              const newTheme = document.body.getAttribute('data-theme')
+              await themeStorage.setValue(newTheme === 'dark' ? 'dark' : 'light')
+            }
+          })
+        })
+
+        observer.observe(document.body, {
+          attributes: true,
+        })
       })
 
       ctx.addEventListener(window, 'wxt:locationchange', async ({ oldUrl, newUrl }) => {
