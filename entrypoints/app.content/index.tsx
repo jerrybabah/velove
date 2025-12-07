@@ -9,7 +9,7 @@ import {
   fetchEditedPost,
   fetchPostStat,
 } from './api'
-import { App } from './App'
+import { Toggle } from './Toggle'
 
 export default defineContentScript({
   matches: ['https://*.velog.io/*'],
@@ -100,7 +100,7 @@ async function renderToggle(ctx: ContentScriptContext) {
     
           root.render(
             <StyleProvider container={cssContainer}>
-              <App/>
+              <Toggle />
             </StyleProvider>
           )
     

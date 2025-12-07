@@ -3,7 +3,7 @@ import {
   Button,
 } from 'antd'
 
-export function App() {
+export function Toggle() {
   const theme = useTheme()
 
   const onClick = useCallback(() => {
