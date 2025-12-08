@@ -13,8 +13,11 @@ export default defineConfig({
     permissions: [
       'sidePanel',
       'storage',
+      'tabs',
+      'scripting',
     ],
     host_permissions: [
+      'https://*.velog.io/*',
       'https://api.mixpanel.com/*',
       'https://api.lemonsqueezy.com/*',
     ],
