@@ -66,16 +66,67 @@ export function Sidepanel() {
           background: token.colorBgLayout,
         }}
       >
-        <div style={{ padding: '12px 16px', borderBottom: `1px solid ${token.colorBorderSecondary}`, background: token.colorBgElevated, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-          <Dropdown menu={{ items: sortMenuItems, selectedKeys: [sortOption] }} trigger={['click']}>
-            <Text style={{ cursor: 'pointer' }}>
-              <SortAscendingOutlined style={{ marginRight: 4 }} />
-              {SORT_OPTIONS.find((o) => o.value === sortOption)?.label}
+        <div
+          style={{
+            padding: '16px 20px',
+            background: token.colorBgContainer,
+            borderBottom: `1px solid ${token.colorBorderSecondary}`,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            zIndex: 10,
+            boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
+          }}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <Text
+              strong
+              style={{
+                fontSize: 20,
+                background: 'linear-gradient(45deg, #D39AE3, #4BBCE7)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                lineHeight: 1.2,
+              }}
+            >
+              Velove
             </Text>
+            {username && (
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                @{username}
+              </Text>
+            )}
+          </div>
+          <Dropdown menu={{ items: sortMenuItems, selectedKeys: [sortOption] }} trigger={['click']}>
+            <div
+              style={{
+                cursor: 'pointer',
+                padding: '6px 10px',
+                borderRadius: 20,
+                background: token.colorFillTertiary,
+                transition: 'all 0.2s',
+                display: 'flex',
+                alignItems: 'center',
+              }}
+            >
+              <Text style={{ fontSize: 12, fontWeight: 500 }}>
+                <SortAscendingOutlined style={{ marginRight: 4 }} />
+                {SORT_OPTIONS.find((o) => o.value === sortOption)?.label}
+              </Text>
+            </div>
           </Dropdown>
         </div>
 
-        <div ref={containerRef} style={{ flex: 1, minHeight: 0, overflowY: 'auto', background: token.colorBgLayout }}>
+        <div
+          ref={containerRef}
+          style={{
+            flex: 1,
+            minHeight: 0,
+            overflowY: 'auto',
+            padding: '16px',
+            background: token.colorBgLayout,
+          }}
+        >
           {sortedPosts.map((post: Post) => (
             <PostCard
               key={post.id}

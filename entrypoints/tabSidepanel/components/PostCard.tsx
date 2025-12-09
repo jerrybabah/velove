@@ -5,10 +5,10 @@ import {
   LockOutlined,
   MessageOutlined,
 } from '@ant-design/icons'
-import { Card, Typography } from 'antd'
+import { Typography, theme } from 'antd'
 import { useState } from 'react'
 
-const { Text, Paragraph } = Typography
+const { Text } = Typography
 
 const formatNumber = (value: number | undefined) => (value ?? 0).toLocaleString('ko-KR')
 
@@ -39,88 +39,130 @@ type PostCardProps = {
 }
 
 export function PostCard({ post, username, onClick }: PostCardProps) {
-  const [expanded, setExpanded] = useState(false)
+  const { token } = theme.useToken()
+  const [isHovered, setIsHovered] = useState(false)
 
   return (
-    <Card
-      size="small"
-      hoverable
+    <div
       onClick={onClick}
-      style={{ margin: '8px 12px' }}
-      styles={{ body: { padding: 12 } }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      style={{
+        background: token.colorBgContainer,
+        borderRadius: 16,
+        padding: 16,
+        marginBottom: 16,
+        cursor: 'pointer',
+        border: `1px solid ${isHovered ? token.colorPrimaryBorder : 'transparent'}`,
+        boxShadow: isHovered
+          ? '0 8px 24px rgba(0,0,0,0.08)'
+          : '0 2px 8px rgba(0,0,0,0.02)',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        transform: isHovered ? 'translateY(-2px)' : 'none',
+        display: 'flex',
+        gap: 16,
+        position: 'relative',
+        overflow: 'hidden',
+      }}
     >
-      <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-        <div
-          style={{
-            flex: 1,
-            minWidth: 0,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 10,
-            minHeight: post.thumbnail ? 70 : 'auto',
-            justifyContent: 'center',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-            {post.isPrivate && <LockOutlined style={{ color: '#faad14', fontSize: 12, marginTop: 4 }} />}
-            <Paragraph
-              ellipsis={
-                expanded
-                  ? false
-                  : {
-                      rows: 2,
-                      expandable: 'collapsible',
-                      symbol: (expanded: boolean) => (expanded ? '접기' : '더보기'),
-                      onExpand: (_, info) => {
-                        setExpanded(info.expanded)
-                      },
-                    }
-              }
-              style={{ margin: 0, fontSize: 14, fontWeight: 500, wordBreak: 'keep-all' }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {post.title}
-            </Paragraph>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <Text type="secondary" style={{ fontSize: 11, whiteSpace: 'nowrap' }}>
-              <ClockCircleOutlined style={{ marginRight: 4 }} />
-              {formatRelativeDate(post.releasedAt)}
-            </Text>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 12px' }}>
-              <Text type="secondary" style={{ fontSize: 11, whiteSpace: 'nowrap' }}>
-                <EyeOutlined style={{ marginRight: 4 }} />
-                {formatNumber(post.viewStat?.views)}
-              </Text>
-              <Text type="secondary" style={{ fontSize: 11, whiteSpace: 'nowrap' }}>
-                <HeartOutlined style={{ marginRight: 4 }} />
-                {formatNumber(post.likes)}
-              </Text>
-              <Text type="secondary" style={{ fontSize: 11, whiteSpace: 'nowrap' }}>
-                <MessageOutlined style={{ marginRight: 4 }} />
-                {formatNumber(post.commentsCount)}
-              </Text>
-            </div>
-          </div>
+      <div
+        style={{
+          flex: 1,
+          minWidth: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+        }}
+      >
+        <div style={{ marginBottom: 8 }}>
+          {post.isPrivate && (
+            <LockOutlined
+              style={{ color: token.colorWarning, marginRight: 6, fontSize: 14 }}
+            />
+          )}
+          <Text
+            strong
+            style={{
+              fontSize: 15,
+              lineHeight: 1.5,
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+              color: token.colorText,
+            }}
+          >
+            {post.title}
+          </Text>
         </div>
 
-        {post.thumbnail && (
-          <div style={{ flexShrink: 0 }}>
-            <img
-              src={post.thumbnail}
-              alt={post.title}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <Text type="secondary" style={{ fontSize: 12 }}>
+            <ClockCircleOutlined style={{ marginRight: 4 }} />
+            {formatRelativeDate(post.releasedAt)}
+          </Text>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            <span
               style={{
-                display: 'block',
-                width: 100,
-                height: 70,
-                objectFit: 'cover',
-                borderRadius: 6,
+                fontSize: 12,
+                color: token.colorTextSecondary,
+                display: 'flex',
+                alignItems: 'center',
               }}
-            />
+            >
+              <EyeOutlined style={{ marginRight: 4 }} />{' '}
+              {formatNumber(post.viewStat?.views)}
+            </span>
+            <span
+              style={{
+                fontSize: 12,
+                color: token.colorTextSecondary,
+                display: 'flex',
+                alignItems: 'center',
+              }}
+            >
+              <HeartOutlined style={{ marginRight: 4 }} /> {formatNumber(post.likes)}
+            </span>
+            <span
+              style={{
+                fontSize: 12,
+                color: token.colorTextSecondary,
+                display: 'flex',
+                alignItems: 'center',
+              }}
+            >
+              <MessageOutlined style={{ marginRight: 4 }} />{' '}
+              {formatNumber(post.commentsCount)}
+            </span>
           </div>
-        )}
+        </div>
       </div>
-    </Card>
+
+      {post.thumbnail && (
+        <div
+          style={{
+            width: 88,
+            height: 88,
+            flexShrink: 0,
+            borderRadius: 12,
+            overflow: 'hidden',
+            background: token.colorFillQuaternary,
+            boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.05)',
+          }}
+        >
+          <img
+            src={post.thumbnail}
+            alt=""
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              transition: 'transform 0.3s ease',
+              transform: isHovered ? 'scale(1.05)' : 'scale(1)',
+            }}
+          />
+        </div>
+      )}
+    </div>
   )
 }
