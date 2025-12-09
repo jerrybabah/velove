@@ -105,7 +105,8 @@ export function PostCard({ post, username, onClick }: PostCardProps) {
             <span
               style={{
                 fontSize: 12,
-                color: token.colorTextSecondary,
+                color: token.colorPrimary,
+                fontWeight: 600,
                 display: 'flex',
                 alignItems: 'center',
               }}

@@ -1,9 +1,9 @@
-import { SortAscendingOutlined } from '@ant-design/icons'
+import { SortAscendingOutlined, BarChartOutlined } from '@ant-design/icons'
 import { Dropdown, Empty, Spin, Typography, ConfigProvider, theme as antdTheme } from 'antd'
-import { useLayoutEffect, useRef } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import { PostCard } from './components/PostCard'
+import { StatsSection } from './components/StatsSection'
 import { SORT_OPTIONS, useSidepanelState } from './hooks/useSidepanelState'
-
 const { Text } = Typography
 
 export function Sidepanel() {
@@ -11,6 +11,7 @@ export function Sidepanel() {
   const token = antdTheme.getDesignToken(themeConfig)
 
   const { username, posts, sortedPosts, sortOption, setSortOption, openPost } = useSidepanelState()
+  const [showStats, setShowStats] = useState(true)
   const containerRef = useRef<HTMLDivElement>(null)
 
   useLayoutEffect(() => {
@@ -89,7 +90,7 @@ export function Sidepanel() {
                 lineHeight: 1.2,
               }}
             >
-              Velove
+              velove
             </Text>
             {username && (
               <Text type="secondary" style={{ fontSize: 12 }}>
@@ -97,25 +98,44 @@ export function Sidepanel() {
               </Text>
             )}
           </div>
-          <Dropdown menu={{ items: sortMenuItems, selectedKeys: [sortOption] }} trigger={['click']}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <div
-              style={{
-                cursor: 'pointer',
-                padding: '6px 10px',
-                borderRadius: 20,
-                background: token.colorFillTertiary,
-                transition: 'all 0.2s',
-                display: 'flex',
-                alignItems: 'center',
-              }}
+                onClick={() => setShowStats(!showStats)}
+                style={{
+                    cursor: 'pointer',
+                    padding: '6px 10px',
+                    borderRadius: 20,
+                    background: showStats ? token.colorPrimaryBg : token.colorFillTertiary,
+                    color: showStats ? token.colorPrimary : token.colorText,
+                    transition: 'all 0.2s',
+                    display: 'flex',
+                    alignItems: 'center',
+                }}
             >
-              <Text style={{ fontSize: 12, fontWeight: 500 }}>
-                <SortAscendingOutlined style={{ marginRight: 4 }} />
-                {SORT_OPTIONS.find((o) => o.value === sortOption)?.label}
-              </Text>
+                <BarChartOutlined />
             </div>
-          </Dropdown>
+            <Dropdown menu={{ items: sortMenuItems, selectedKeys: [sortOption] }} trigger={['click']}>
+                <div
+                style={{
+                    cursor: 'pointer',
+                    padding: '6px 10px',
+                    borderRadius: 20,
+                    background: token.colorFillTertiary,
+                    transition: 'all 0.2s',
+                    display: 'flex',
+                    alignItems: 'center',
+                }}
+                >
+                <Text style={{ fontSize: 12, fontWeight: 500 }}>
+                    <SortAscendingOutlined style={{ marginRight: 4 }} />
+                    {SORT_OPTIONS.find((o) => o.value === sortOption)?.label}
+                </Text>
+                </div>
+            </Dropdown>
+          </div>
         </div>
+
+        {showStats && <StatsSection posts={posts} />}
 
         <div
           ref={containerRef}
