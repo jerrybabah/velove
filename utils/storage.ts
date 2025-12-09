@@ -17,8 +17,6 @@ export type Post = {
   likes: number,
   viewStat?: {
     views: number,
-    last7DaysViews: number,
-    last30DaysViews: number,
     viewsByDay: { [day: string]: number }, // INFO: day is in ISO date string
   }
 }

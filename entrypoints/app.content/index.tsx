@@ -392,34 +392,14 @@ async function handlePostWritten() {
 async function enrichPostWithViewStat(post: Post): Promise<Post> {
   const stat = await fetchPostStat(post.id)
 
-  return {
-    ...post,
-    viewStat: buildViewStat(stat),
-  }
-}
-
-function buildViewStat(stat: Awaited<ReturnType<typeof fetchPostStat>>): NonNullable<Post['viewStat']> {
-  const DAY_MS = 24 * 60 * 60 * 1000
   const startOfToday = new Date()
   startOfToday.setHours(0, 0, 0, 0)
 
-  const sumViewsWithinDays = (days: number) => {
-    const lowerBound = startOfToday.getTime() - (days - 1) * DAY_MS
-
-    return Object.entries(stat.countByDay).reduce((total, [day, count]) => {
-      const dayTime = new Date(day).getTime()
-      if (Number.isNaN(dayTime)) {
-        return total
-      }
-
-      return dayTime >= lowerBound ? total + count : total
-    }, 0)
-  }
-
   return {
-    views: stat.total,
-    last7DaysViews: sumViewsWithinDays(7),
-    last30DaysViews: sumViewsWithinDays(30),
-    viewsByDay: stat.countByDay,
+    ...post,
+    viewStat: {
+      views: stat.total,
+      viewsByDay: stat.countByDay,
+    },
   }
 }
