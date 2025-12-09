@@ -25,18 +25,33 @@ export default defineContentScript({
           handleUrlChanged(null, initUrl, ctx),
         ])
 
-        let attempt = 0
+        let toggleAttempt = 0
 
-        const intervalId = setInterval(async () => {
+        const toggleIntervalId = setInterval(async () => {
           const toggleEl = document.querySelector(`velove-toggle-1`)
 
-          if (toggleEl || attempt >= 20) {
-            clearInterval(intervalId)
+          if (toggleEl || toggleAttempt >= 20) {
+            clearInterval(toggleIntervalId)
             return
           }
 
-          attempt += 1
+          toggleAttempt += 1
           await renderToggle(ctx)
+        }, 500)
+
+        let themeAttempt = 0
+
+        const themeIntervalId = setInterval(async () => {
+          const storedTheme = await themeStorage.getValue()
+
+          if (storedTheme !== null || themeAttempt >= 20) {
+            clearInterval(themeIntervalId)
+            return
+          }
+
+          themeAttempt += 1
+          const currentTheme = document.body.getAttribute('data-theme')
+          await themeStorage.setValue(currentTheme === 'dark' ? 'dark' : 'light')
         }, 500)
 
         const observer = new MutationObserver((mutations) => {
