@@ -4,11 +4,12 @@ import {
   HeartOutlined,
   LockOutlined,
   MessageOutlined,
+  LinkOutlined,
 } from '@ant-design/icons'
 import { Typography, theme } from 'antd'
 import { useState } from 'react'
 
-const { Text } = Typography
+const { Text, Paragraph } = Typography
 
 const formatNumber = (value: number | undefined) => (value ?? 0).toLocaleString('ko-KR')
 
@@ -41,10 +42,10 @@ type PostCardProps = {
 export function PostCard({ post, username, onClick }: PostCardProps) {
   const { token } = theme.useToken()
   const [isHovered, setIsHovered] = useState(false)
+  const [expanded, setExpanded] = useState(false)
 
   return (
     <div
-      onClick={onClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       style={{
@@ -52,7 +53,7 @@ export function PostCard({ post, username, onClick }: PostCardProps) {
         borderRadius: 16,
         padding: 16,
         marginBottom: 16,
-        cursor: 'pointer',
+        cursor: 'default',
         border: `1px solid ${isHovered ? token.colorPrimaryBorder : 'transparent'}`,
         boxShadow: isHovered
           ? '0 8px 24px rgba(0,0,0,0.08)'
@@ -80,20 +81,58 @@ export function PostCard({ post, username, onClick }: PostCardProps) {
               style={{ color: token.colorWarning, marginRight: 6, fontSize: 14 }}
             />
           )}
-          <Text
-            strong
-            style={{
-              fontSize: 15,
-              lineHeight: 1.5,
-              display: '-webkit-box',
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
-              color: token.colorText,
-            }}
-          >
-            {post.title}
-          </Text>
+          {expanded ? (
+            <div>
+              <Text
+                strong
+                style={{
+                  fontSize: 15,
+                  lineHeight: 1.5,
+                  color: token.colorText,
+                  wordBreak: 'keep-all',
+                }}
+              >
+                {post.title}
+              </Text>
+              <span
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setExpanded(false)
+                }}
+                style={{
+                  fontSize: 12,
+                  color: token.colorTextSecondary,
+                  cursor: 'pointer',
+                  marginLeft: 4,
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                접기
+              </span>
+            </div>
+          ) : (
+            <Paragraph
+              strong
+              ellipsis={{
+                rows: 2,
+                expandable: true,
+                symbol: '더보기',
+                onExpand: (e) => {
+                  e.stopPropagation()
+                  setExpanded(true)
+                },
+              }}
+              style={{
+                fontSize: 15,
+                lineHeight: 1.5,
+                marginBottom: 0,
+                color: token.colorText,
+                wordBreak: 'keep-all',
+              }}
+            >
+              {post.title}
+            </Paragraph>
+          )}
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -101,40 +140,53 @@ export function PostCard({ post, username, onClick }: PostCardProps) {
             <ClockCircleOutlined style={{ marginRight: 4 }} />
             {formatRelativeDate(post.releasedAt)}
           </Text>
-          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-            <span
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+              <span
+                style={{
+                  fontSize: 12,
+                  color: token.colorPrimary,
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+              >
+                <EyeOutlined style={{ marginRight: 4 }} />{' '}
+                {formatNumber(post.viewStat?.views)}
+              </span>
+              <span
+                style={{
+                  fontSize: 12,
+                  color: token.colorTextSecondary,
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+              >
+                <HeartOutlined style={{ marginRight: 4 }} /> {formatNumber(post.likes)}
+              </span>
+              <span
+                style={{
+                  fontSize: 12,
+                  color: token.colorTextSecondary,
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+              >
+                <MessageOutlined style={{ marginRight: 4 }} />{' '}
+                {formatNumber(post.commentsCount)}
+              </span>
+            </div>
+            <LinkOutlined
+              onClick={onClick}
               style={{
-                fontSize: 12,
-                color: token.colorPrimary,
-                fontWeight: 600,
-                display: 'flex',
-                alignItems: 'center',
-              }}
-            >
-              <EyeOutlined style={{ marginRight: 4 }} />{' '}
-              {formatNumber(post.viewStat?.views)}
-            </span>
-            <span
-              style={{
-                fontSize: 12,
+                fontSize: 16,
                 color: token.colorTextSecondary,
-                display: 'flex',
-                alignItems: 'center',
+                cursor: 'pointer',
+                transition: 'color 0.2s',
               }}
-            >
-              <HeartOutlined style={{ marginRight: 4 }} /> {formatNumber(post.likes)}
-            </span>
-            <span
-              style={{
-                fontSize: 12,
-                color: token.colorTextSecondary,
-                display: 'flex',
-                alignItems: 'center',
-              }}
-            >
-              <MessageOutlined style={{ marginRight: 4 }} />{' '}
-              {formatNumber(post.commentsCount)}
-            </span>
+              onMouseEnter={(e) => (e.currentTarget.style.color = token.colorPrimary)}
+              onMouseLeave={(e) => (e.currentTarget.style.color = token.colorTextSecondary)}
+            />
           </div>
         </div>
       </div>

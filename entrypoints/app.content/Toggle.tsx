@@ -1,7 +1,10 @@
 import {
   ConfigProvider,
   Button,
+  Typography,
 } from 'antd'
+
+const { Text } = Typography
 
 export function Toggle() {
   const theme = useTheme()
@@ -18,7 +21,16 @@ export function Toggle() {
         onClick={onClick}
         shape='round'
       >
-        velove❤️
+        <Text
+          strong
+          style={{
+            background: 'linear-gradient(45deg, #D39AE3, #4BBCE7)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+          }}
+        >
+          velove
+        </Text>
       </Button>
     </ConfigProvider>
   )
