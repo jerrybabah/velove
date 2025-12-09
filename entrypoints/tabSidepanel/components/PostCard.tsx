@@ -5,9 +5,11 @@ import {
   LockOutlined,
   MessageOutlined,
   LinkOutlined,
+  BarChartOutlined,
 } from '@ant-design/icons'
-import { Typography, theme } from 'antd'
+import { Typography, theme, Modal } from 'antd'
 import { useState } from 'react'
+import { StatsSection } from './StatsSection'
 
 const { Text, Paragraph } = Typography
 
@@ -43,8 +45,10 @@ export function PostCard({ post, username, onClick }: PostCardProps) {
   const { token } = theme.useToken()
   const [isHovered, setIsHovered] = useState(false)
   const [expanded, setExpanded] = useState(false)
+  const [showStatsModal, setShowStatsModal] = useState(false)
 
   return (
+    <>
     <div
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -176,17 +180,33 @@ export function PostCard({ post, username, onClick }: PostCardProps) {
                 {formatNumber(post.commentsCount)}
               </span>
             </div>
-            <LinkOutlined
-              onClick={onClick}
-              style={{
-                fontSize: 16,
-                color: token.colorTextSecondary,
-                cursor: 'pointer',
-                transition: 'color 0.2s',
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = token.colorPrimary)}
-              onMouseLeave={(e) => (e.currentTarget.style.color = token.colorTextSecondary)}
-            />
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <BarChartOutlined
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setShowStatsModal(true)
+                }}
+                style={{
+                  fontSize: 16,
+                  color: token.colorTextSecondary,
+                  cursor: 'pointer',
+                  transition: 'color 0.2s',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = token.colorPrimary)}
+                onMouseLeave={(e) => (e.currentTarget.style.color = token.colorTextSecondary)}
+              />
+              <LinkOutlined
+                onClick={onClick}
+                style={{
+                  fontSize: 16,
+                  color: token.colorTextSecondary,
+                  cursor: 'pointer',
+                  transition: 'color 0.2s',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = token.colorPrimary)}
+                onMouseLeave={(e) => (e.currentTarget.style.color = token.colorTextSecondary)}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -217,5 +237,26 @@ export function PostCard({ post, username, onClick }: PostCardProps) {
         </div>
       )}
     </div>
+    <Modal
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', paddingRight: 24 }}>
+            <Text style={{ maxWidth: '100%' }} ellipsis>
+              {post.title}
+            </Text>
+          </div>
+        }
+        open={showStatsModal}
+        onCancel={(e) => {
+            e.stopPropagation()
+            setShowStatsModal(false)
+        }}
+        footer={null}
+        width={600}
+        centered
+        destroyOnHidden
+      >
+        <StatsSection posts={[post]} />
+      </Modal>
+    </>
   )
 }
