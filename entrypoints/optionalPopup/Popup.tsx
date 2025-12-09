@@ -2,13 +2,28 @@ import {
   ConfigProvider,
   Result,
   Button,
+  theme as antdTheme,
 } from 'antd'
 
 export function Popup() {
-  const theme = useTheme()
+  const themeConfig = useTheme()
+  const token = antdTheme.getDesignToken(themeConfig)
+
+  useEffect(() => {
+    const prevBackground = document.body.style.backgroundColor
+    const prevColor = document.body.style.color
+
+    document.body.style.backgroundColor = token.colorBgLayout
+    document.body.style.color = token.colorText
+
+    return () => {
+      document.body.style.backgroundColor = prevBackground
+      document.body.style.color = prevColor
+    }
+  }, [token.colorBgLayout, token.colorText])
 
   return (
-    <ConfigProvider theme={theme}>
+    <ConfigProvider theme={themeConfig}>
       <Result
         status='404'
         title='velog 전용 익스텐션입니다'
