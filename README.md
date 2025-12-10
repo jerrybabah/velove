@@ -6,8 +6,8 @@
 
 내 글의 통계(조회수, 좋아요, 댓글)를 한눈에 보고, 코드 블록을 쉽게 복사하세요.
 
-[![Chrome](https://img.shields.io/badge/Chrome-Extension-4285F4?logo=googlechrome&logoColor=white)](#)
-[![Firefox](https://img.shields.io/badge/Firefox-Add--on-FF7139?logo=firefox&logoColor=white)](#)
+[![Chrome](https://img.shields.io/badge/Chrome-Extension-4285F4?logo=googlechrome&logoColor=white)](https://chromewebstore.google.com/detail/velove-velog-%ED%86%B5%EA%B3%84-%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC-%EC%BD%94%EB%93%9C%EB%B3%B5%EC%82%AC/kchhlpmlimheihmppgecbglmfcafdihm?hl=en&authuser=0)
+<!-- [![Firefox](https://img.shields.io/badge/Firefox-Add--on-FF7139?logo=firefox&logoColor=white)](#) -->
 [![WXT](https://img.shields.io/badge/Built%20with-WXT-646CFF?logo=vite&logoColor=white)](https://wxt.dev)
 
 </div>
@@ -106,33 +106,33 @@ velog.io 페이지
      │
      ▼
 ┌─────────────────────────────────────────┐
-│  Content Script (app.content)           │
-│  - 사용자 정보 및 게시글 목록 fetch      │
-│  - v3 GraphQL: 게시글 기본 정보          │
-│  - v2 GraphQL: 조회수 통계               │
-│  - 로컬 스토리지에 캐싱 (30분 TTL)       │
+│  Content Script (app.content)           
+│  - 사용자 정보 및 게시글 목록 fetch      
+│  - v3 GraphQL: 게시글 기본 정보          
+│  - v2 GraphQL: 조회수 통계               
+│  - 로컬 스토리지에 캐싱 (30분 TTL)       
 └─────────────────────────────────────────┘
      │
      ▼
 ┌─────────────────────────────────────────┐
-│  Interceptor (injected script)          │
-│  - fetch/XHR 요청 감시                   │
-│  - 글 작성/수정/삭제 감지                │
-│  - postMessage로 콘텐츠 스크립트에 알림  │
+│  Interceptor (injected script)          
+│  - fetch/XHR 요청 감시                   
+│  - 글 작성/수정/삭제 감지                
+│  - postMessage로 콘텐츠 스크립트에 알림  
 └─────────────────────────────────────────┘
      │
      ▼
 ┌─────────────────────────────────────────┐
-│  Background Service Worker              │
-│  - 사이드패널 연결 상태 관리             │
-│  - 메시지 라우팅                         │
+│  Background Service Worker              
+│  - 사이드패널 연결 상태 관리             
+│  - 메시지 라우팅                         
 └─────────────────────────────────────────┘
      │
      ▼
 ┌─────────────────────────────────────────┐
-│  Side Panel                             │
-│  - 저장된 데이터로 UI 렌더링             │
-│  - 정렬, 필터링, 게시글 이동             │
+│  Side Panel                             
+│  - 저장된 데이터로 UI 렌더링             
+│  - 정렬, 필터링, 게시글 이동             
 └─────────────────────────────────────────┘
 ```
 
