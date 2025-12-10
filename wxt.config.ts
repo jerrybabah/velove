@@ -8,7 +8,7 @@ export default defineConfig({
   },
   manifest: {
     name: 'velove - velog 통계, 카테고리, 코드복사',
-    description: '통계 편하게 보기, 카테고리로 내 글 관리하기',
+    description: '통계 편하게 보기, 카테고리로 관리, 코드블록 복사',
     action: {},
     permissions: [
       'sidePanel',
