@@ -1,6 +1,6 @@
-import { SortAscendingOutlined, BarChartOutlined } from '@ant-design/icons'
-import { Dropdown, Empty, Spin, Typography, ConfigProvider, theme as antdTheme } from 'antd'
-import { useLayoutEffect, useRef, useState } from 'react'
+import { SortAscendingOutlined, BarChartOutlined, ReloadOutlined } from '@ant-design/icons'
+import { Dropdown, Empty, Spin, Typography, ConfigProvider, theme as antdTheme, Tooltip, Switch } from 'antd'
+import { useLayoutEffect, useRef, useState, useEffect } from 'react'
 import { PostCard } from './components/PostCard'
 import { StatsSection } from './components/StatsSection'
 import { SORT_OPTIONS, useSidepanelState } from './hooks/useSidepanelState'
@@ -12,7 +12,18 @@ export function Sidepanel() {
 
   const { username, posts, sortedPosts, sortOption, setSortOption, openPost } = useSidepanelState()
   const [showStats, setShowStats] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [cooldownSeconds, setCooldownSeconds] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (cooldownSeconds > 0) {
+      const timer = setInterval(() => {
+        setCooldownSeconds((prev) => prev - 1)
+      }, 1000)
+      return () => clearInterval(timer)
+    }
+  }, [cooldownSeconds])
 
   useLayoutEffect(() => {
     const prevBodyOverflow = document.body.style.overflow
@@ -25,6 +36,16 @@ export function Sidepanel() {
       document.documentElement.style.overflow = prevHtmlOverflow
     }
   }, [])
+
+  const handleRefresh = async () => {
+    if (isRefreshing || cooldownSeconds > 0) return
+
+    setCooldownSeconds(10)
+    setIsRefreshing(true)
+
+    await refreshPosts()
+    setIsRefreshing(false)
+  }
 
   const sortMenuItems = SORT_OPTIONS.map((option) => ({
     key: option.value,
@@ -99,21 +120,30 @@ export function Sidepanel() {
             )}
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <div
-                onClick={() => setShowStats(!showStats)}
+            <Tooltip title={cooldownSeconds > 0 ? `${cooldownSeconds}초 뒤에 갱신할 수 있습니다` : ''}>
+              <div
+                onClick={handleRefresh}
                 style={{
-                    cursor: 'pointer',
-                    padding: '6px 10px',
-                    borderRadius: 20,
-                    background: showStats ? token.colorPrimaryBg : token.colorFillTertiary,
-                    color: showStats ? token.colorPrimary : token.colorText,
-                    transition: 'all 0.2s',
-                    display: 'flex',
-                    alignItems: 'center',
+                  cursor: (isRefreshing || cooldownSeconds > 0) ? 'not-allowed' : 'pointer',
+                  padding: '6px 10px',
+                  borderRadius: 20,
+                  background: token.colorFillTertiary,
+                  color: (isRefreshing || cooldownSeconds > 0) ? token.colorTextDisabled : token.colorText,
+                  transition: 'all 0.2s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  opacity: (isRefreshing || cooldownSeconds > 0) ? 0.5 : 1,
                 }}
-            >
-                <BarChartOutlined />
-            </div>
+              >
+                <ReloadOutlined spin={isRefreshing} />
+              </div>
+            </Tooltip>
+            <Switch
+              checked={showStats}
+              onChange={setShowStats}
+              checkedChildren={<BarChartOutlined />}
+              unCheckedChildren={<BarChartOutlined />}
+            />
             <Dropdown menu={{ items: sortMenuItems, selectedKeys: [sortOption] }} trigger={['click']}>
                 <div
                 style={{
@@ -159,4 +189,24 @@ export function Sidepanel() {
       </div>
     </ConfigProvider>
   )
+}
+
+async function refreshPosts() {
+  const [tab] = await browser.tabs.query({ active: true, lastFocusedWindow: true })
+
+  if (!tab || !tab.id) {
+    return
+  }
+
+  try {
+    const res = await browser.tabs.sendMessage(tab.id, { type: 'refreshPosts' })
+
+    if (res.error) {
+      console.error('Failed to refresh posts:', res.error)
+      return
+    }
+
+  } catch (e) {
+    console.error('Failed to refresh posts:', e)
+  }
 }

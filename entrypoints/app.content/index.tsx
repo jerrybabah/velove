@@ -86,6 +86,108 @@ export default defineContentScript({
           await handlePostRemoved(removedPostId)
         }
       })
+
+      browser.runtime.onMessage.addListener(async (msg, sender, sendRes) => {
+        (async () => {
+          try {
+            if (msg.type === 'refreshPosts') {
+              if (!sender.url) {
+                sendRes({
+                  data: null,
+                  error: {
+                    name: 'NoSenderUrlError',
+                    message: 'No sender URL available',
+                  },
+                })
+                return
+              }
+
+              const urlObj = new URL(sender.url)
+
+              if (urlObj.pathname !== '/tabSidepanel.html') {
+                sendRes({
+                  data: null,
+                  error: {
+                    name: 'InvalidSenderError',
+                    message: 'Sender is not the side panel',
+                  },
+                })
+                return
+              }
+
+              const username = await currentUsernameStorage.getValue()
+    
+              if (!username) {
+                sendRes({
+                  data: null,
+                  error: {
+                    name: 'NoCurrentUsernameError',
+                    message: 'No current username available',
+                  },
+                })
+                return
+              }
+              
+              let postsWithoutStats: Post[] = []
+              let cursor: string | undefined = undefined
+    
+              while (true) {
+                const { posts, nextCursor } = await fetchPosts({ username, limit: 50, cursor })
+                postsWithoutStats = postsWithoutStats.concat(posts)
+    
+                if (!nextCursor) {
+                  break
+                }
+    
+                cursor = nextCursor
+              }
+    
+              const statResults = await chunkRun({
+                inputs: postsWithoutStats,
+                size: 10,
+                async run(post) {
+                  return enrichPostWithViewStat(post)
+                },
+              })
+    
+              const allPosts = statResults.map((result, index) => {
+                if (result.status === 'fulfilled') {
+                  return result.value
+                }
+    
+                console.error(`Failed to fetch stats for post ${postsWithoutStats[index].id}`, result.reason)
+                return postsWithoutStats[index]
+              })
+    
+              await postsStorage.setValue(allPosts)
+              await postsStorage.setMeta({ cachedAt: Date.now() })
+
+              sendRes({ data: null, error: null })
+
+            } else {
+              sendRes({
+                data: null,
+                error: { name:
+                  'UnknownMessageTypeError',
+                  message: `Unknown message type: ${msg.type}`,
+                },
+              })
+            }
+          } catch (e) {
+            console.error('Error in refreshPosts message handler', e)
+            sendRes({
+              data: null,
+              error: {
+                name: e instanceof Error ? e.name : 'UnknownError',
+                message: e instanceof Error ? e.message : 'An unknown error occurred',
+              },
+            })
+            return
+          }
+        })()
+
+        return true
+      })
   
       await injectScript('/interceptor-injected.js')
 
@@ -307,8 +409,8 @@ async function initStorage() {
   })
 
 
-  postsStorage.setValue(allPosts)
-  postsStorage.setMeta({ cachedAt: Date.now() })
+  await postsStorage.setValue(allPosts)
+  await postsStorage.setMeta({ cachedAt: Date.now() })
 }
 
 async function handlePostEdited(postId: string) {
@@ -339,7 +441,7 @@ async function handlePostEdited(postId: string) {
   const nextPosts = [...posts]
   nextPosts[targetIndex] = updatedPost
 
-  postsStorage.setValue(nextPosts)
+  await postsStorage.setValue(nextPosts)
 }
 
 async function handlePostRemoved(postId: string) {
@@ -355,7 +457,7 @@ async function handlePostRemoved(postId: string) {
     return
   }
 
-  postsStorage.setValue(filteredPosts)
+  await postsStorage.setValue(filteredPosts)
 }
 
 async function handlePostWritten() {
@@ -386,7 +488,7 @@ async function handlePostWritten() {
   }
 
   const dedupedPosts = prevPosts.filter((post) => post.id !== latestPost.id)
-  postsStorage.setValue([latestPostWithStats, ...dedupedPosts])
+  await postsStorage.setValue([latestPostWithStats, ...dedupedPosts])
 }
 
 async function enrichPostWithViewStat(post: Post): Promise<Post> {
