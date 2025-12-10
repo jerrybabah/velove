@@ -27,5 +27,14 @@ export default defineConfig({
         matches: ['https://*.velog.io/*'],
       },
     ],
+    browser_specific_settings: {
+      gecko: {
+        id: '@velove.jerrybaba',
+        // @ts-ignore
+        data_collection_permissions: {
+          required: ['none'],
+        },
+      },
+    },
   },
 });

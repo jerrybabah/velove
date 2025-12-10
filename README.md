@@ -7,7 +7,7 @@
 내 글의 통계(조회수, 좋아요, 댓글)를 한눈에 보고, 코드 블록을 쉽게 복사하세요.
 
 [![Chrome](https://img.shields.io/badge/Chrome-Extension-4285F4?logo=googlechrome&logoColor=white)](https://chromewebstore.google.com/detail/velove-velog-%ED%86%B5%EA%B3%84-%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC-%EC%BD%94%EB%93%9C%EB%B3%B5%EC%82%AC/kchhlpmlimheihmppgecbglmfcafdihm?hl=en&authuser=0)
-<!-- [![Firefox](https://img.shields.io/badge/Firefox-Add--on-FF7139?logo=firefox&logoColor=white)](#) -->
+[![Firefox](https://img.shields.io/badge/Firefox-Add--on-FF7139?logo=firefox&logoColor=white)](https://addons.mozilla.org/ko/firefox/addon/velove-velog-%ED%86%B5%EA%B3%84-%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC-%EC%BD%94%EB%93%9C%EB%B3%B5%EC%82%AC/)
 [![WXT](https://img.shields.io/badge/Built%20with-WXT-646CFF?logo=vite&logoColor=white)](https://wxt.dev)
 
 </div>
