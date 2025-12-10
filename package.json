@@ -2,7 +2,7 @@
   "name": "velove",
   "description": "velog 통계, 카테고리, 코드복사",
   "private": true,
-  "version": "0.0.3",
+  "version": "0.0.4",
   "type": "module",
   "scripts": {
     "dev": "wxt",
